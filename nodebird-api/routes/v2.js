@@ -1,14 +1,26 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { User, Domain, Post, Hashtag } = require('../models');
-const { verifyToken, deprecated } = require('./middlewares');
+const { verifyToken, apiLimiter } = require('./middlewares');
+const cors = require('cors');
+const url = require('url');
 
 const router = express.Router();
 
-// router.use() 사용하면 모든 라우터에 미들웨어 적용
-router.use(deprecated);
+// router.use(cors());
+router.use(async (req, res, next) => {
+  const domain = await Domain.findOne({
+    where: { host: url.parse(req.header('origin')).host }
+  });
+  // 등록된 도메인만 허용
+  if(domain) {
+    cors({ origin: req.header('origin') })(req, res, next);
+  } else {
+    next();
+  }  
+})
 
-router.post('/token', async (req, res, next) => {
+router.post('/token', apiLimiter, async (req, res, next) => {
   const { clientSecret } = req.body;
   try {
     const domain = await Domain.findOne({
@@ -44,11 +56,11 @@ router.post('/token', async (req, res, next) => {
   }
 });
 
-router.get('/test', verifyToken, (req, res) => {
+router.get('/test', apiLimiter, verifyToken, (req, res) => {
   return res.json(req.decoded);
 });
 
-router.get('/posts/my', verifyToken, async (req, res) => {
+router.get('/posts/my', apiLimiter, verifyToken, async (req, res) => {
   try {
     const posts = await Post.findAll({ where: {UserId: req.decoded.id } });
     return res.json({
@@ -64,7 +76,7 @@ router.get('/posts/my', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/posts/hashtag/:title', verifyToken, async (req, res) => {
+router.get('/posts/hashtag/:title', apiLimiter, verifyToken, async (req, res) => {
   try {
     const hashtag = await Hashtag.findOne({ where: { title: req.params.title } });
     if(!hashtag) {
@@ -87,7 +99,7 @@ router.get('/posts/hashtag/:title', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/follow', verifyToken, async (req, res) => {
+router.get('/follow', apiLimiter, verifyToken, async (req, res) => {
   try {
     const user = await User.findOne({ where: { id: req.decoded.id } });
     const follower = await user.getFollowers({ attributes: ['id', 'nick'] });

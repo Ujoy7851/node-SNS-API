@@ -1,9 +1,12 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { User, Domain, Post, Hashtag } = require('../models');
-const { verifyToken } = require('./middlewares');
+const { verifyToken, deprecated } = require('./middlewares');
 
 const router = express.Router();
+
+// router.use() 사용하면 모든 라우터에 미들웨어 적용
+// router.use(deprecated);
 
 router.post('/token', async (req, res, next) => {
   const { clientSecret } = req.body;

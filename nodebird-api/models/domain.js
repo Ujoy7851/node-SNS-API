@@ -13,8 +13,11 @@ module.exports = class Domain extends Sequelize.Model {
         type: Sequelize.STRING(10),
         allowNull: false,
       },
-
       clientSecret: {
+        type: Sequelize.STRING(40),
+        allowNull: false,
+      },
+      frontSecret: {
         type: Sequelize.STRING(40),
         allowNull: false,
       },

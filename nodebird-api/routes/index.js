@@ -31,6 +31,7 @@ router.post('/domain', async (req, res, next) => {
       host: req.body.host,
       type: req.body.type,
       clientSecret: uuidv4(),
+      frontSecret: uuidv4(),
     });
     res.redirect('/');
   } catch(error) {
